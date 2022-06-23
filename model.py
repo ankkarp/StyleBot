@@ -102,8 +102,3 @@ class Model:
             img = Image.fromarray((self.im_convert(target) * 255).astype(np.uint8))
             img.save('res.jpg')
             return img
-
-
-if __name__ == '__main__':
-    model = Model()
-    model.stylize(125)
