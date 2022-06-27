@@ -20,6 +20,7 @@ url = {
     'r84f56x8': 'https://github.com/Coloquinte/torchSR/releases/download/v1.0.3/ninasr_b2_x8.pt',
 }
 
+
 class AttentionBlock(nn.Module):
     """
     A typical Squeeze-Excite attention block, with a local pooling instead of global
@@ -58,7 +59,6 @@ class ResBlock(nn.Module):
         m.append(AttentionBlock(mid_feats))
         conv2 = nn.Conv2d(mid_feats, n_feats, 3, padding=1, bias=False)
         nn.init.kaiming_normal_(conv2.weight)
-        #nn.init.zeros_(conv2.weight)
         m.append(conv2)
 
         self.body = nn.Sequential(*m)
@@ -152,9 +152,11 @@ def ninasr_b0(scale, pretrained=False):
     model = NinaSR(10, 16, scale, pretrained)
     return model
 
+
 def ninasr_b1(scale, pretrained=False):
     model = NinaSR(26, 32, scale, pretrained)
     return model
+
 
 def ninasr_b2(scale, pretrained=False):
     model = NinaSR(84, 56, scale, pretrained)

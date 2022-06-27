@@ -3,9 +3,8 @@ from aiogram import Bot, Dispatcher, executor, types
 import torchvision.transforms as tt
 from PIL import Image
 from ninasr import *
-from basicsr.archs.rrdbnet_arch import RRDBNet
 import torch as th
-from torch.hub import load_state_dict_from_url
+import os
 
 API_TOKEN = '5503345880:AAF_QgSgOHwrMlEY5ABAWajpsDhXxxe3DxM'
 
@@ -26,18 +25,24 @@ async def send_welcome(message: types.Message):
 
 
 @dp.message_handler(content_types=['photo'])
-async def enhance(message):
-    await message.photo[-1].download(f'{message.message_id}.png')
-    img = Image.open(f'{message.message_id}.png')
-    lr_t = tt.ToTensor()(img)[:3]
-    # model = th.load('RRDB_PSNR_x4.pth', map_location=th.device('cpu'))
-    model = ninasr_b2(2, pretrained=True)
-    # model = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64, num_block=23, num_grow_ch=32, scale=4)
-    # model.load_state_dict(th.load('RealESRGAN_x4plus.pth'))
-    sr_t = model(lr_t)
-    sr = tt.ToPILImage()(sr_t.squeeze(0))
-    sr.save(f'{message.message_id}.png')
-    await bot.send_photo(message.chat.id, types.InputFile(f'{message.message_id}.png'))
+async def vk_pfp_check(message):
+    try:
+        downloadable = message.photo[-1]
+        img_name = f'{message.message_id}.png'
+        if min(downloadable['width'], downloadable['height']) < 400:
+            await downloadable.download(img_name)
+            img = Image.open(img_name)
+            lr_t = tt.ToTensor()(img)[:3]
+            model = ninasr_b2(2, pretrained=True)
+            sr_t = model(lr_t)
+            sr = tt.ToPILImage()(sr_t.squeeze(0))
+            sr.save(img_name)
+            await bot.send_photo(message.chat.id, types.InputFile(img_name))
+            os.remove(img_name)
+        else:
+            bot.send_message(message.chat.id, 'Photo does not need rescaling')
+    except Exception as e:
+        await bot.send_message(message.chat.id, e)
 
 
 # @dp.message_handler(commands=['set_style'])
@@ -63,4 +68,3 @@ async def enhance(message):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
