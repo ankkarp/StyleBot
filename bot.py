@@ -1,9 +1,11 @@
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-import torchvision.transforms as tt
-from PIL import Image
-from ninasr import *
-import torch as th
+# import torchvision.transforms as tt
+# from PIL import Image
+# from ninasr import *
+# from edrs import *
+# from rcan import *
+# import torch as th
 import os
 
 API_TOKEN = '5503345880:AAF_QgSgOHwrMlEY5ABAWajpsDhXxxe3DxM'
@@ -21,6 +23,7 @@ async def send_welcome(message: types.Message):
     """
     This handler will be called when user sends `/start` or `/help` command
     """
+    os.system('cd ESRGAN')
     await message.reply("This bot can style image by pattern of another image. Send 2 pictures: 1) base 2) style")
 
 
@@ -28,21 +31,23 @@ async def send_welcome(message: types.Message):
 async def vk_pfp_check(message):
     try:
         downloadable = message.photo[-1]
-        img_name = f'{message.message_id}.png'
-        if min(downloadable['width'], downloadable['height']) < 400:
-            await downloadable.download(img_name)
-            img = Image.open(img_name)
-            lr_t = tt.ToTensor()(img)[:3]
-            model = ninasr_b2(2, pretrained=True)
-            sr_t = model(lr_t)
-            sr = tt.ToPILImage()(sr_t.squeeze(0))
-            sr.save(img_name)
-            await bot.send_photo(message.chat.id, types.InputFile(img_name))
-            os.remove(img_name)
-        else:
-            bot.send_message(message.chat.id, 'Photo does not need rescaling')
+        os.chdir(os.path.abspath('ESRGAN'))
+        await downloadable.download(f'LR/{message.chat.id}.png')
+        # img = Image.open(img_name)
+        # lr_t = tt.ToTensor()(img)[:3]
+        # model = edsr_baseline(2, pretrained=True)
+        # # model = rcan(2, pretrained=True)
+        # # model = edsr(2, pretrained=True)
+        # sr_t = model(lr_t)
+        # sr = tt.ToPILImage()(sr_t.squeeze(0))
+        # sr.save(img_name)
+        os.system("python test.py")
+        await bot.send_photo(message.chat.id, types.InputFile(f'results/{message.chat.id}_rlt.png'))
+        os.remove(f'results/{message.chat.id}_rlt.png')
+        os.remove(f'LR/{message.chat.id}.png')
+        # bot.send_message(message.chat.id, 'Photo does not need rescaling')
     except Exception as e:
-        await bot.send_message(message.chat.id, e)
+        print(e)
 
 
 # @dp.message_handler(commands=['set_style'])
