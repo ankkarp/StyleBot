@@ -37,7 +37,9 @@ async def send_welcome(message: types.Message):
 @dp.message_handler(commands='style', commands_ignore_caption=False, content_types=["document", "photo"])
 async def set_style(message):
     if message.photo:
-        await message.photo[-1].download(f'style_{message.chat.id}.jpg')
+        await message.photo[-1].download(destination_file=f'style_{message.chat.id}.png')
+    elif message.document:
+        await message.document.download(destination_file=f'style_{message.chat.id}.png')
     else:
         await bot.send_message(message.chat.id, 'Прикрепите картинку')
 
@@ -45,15 +47,18 @@ async def set_style(message):
 @dp.message_handler(commands='content', commands_ignore_caption=False, content_types=["document", "photo"])
 async def set_content(message):
     if message.photo:
-        await message.photo[-1].download(f'content_{message.chat.id}.jpg')
+        await message.photo[-1].download(destination_file=f'content_{message.chat.id}.png')
+    elif message.document:
+        await message.document.download(destination_file=f'content_{message.chat.id}.png')
     else:
         await bot.send_message(message.chat.id, 'Прикрепите картинку')
 
 
 @dp.message_handler(commands='run')
 async def run(message):
+    # print(message.chat.id)
     stylize(message.chat.id, 100)
-    await bot.send_photo(message.chat.id, types.InputFile(f'res_{message.chat.id}.jpg'))
+    await bot.send_photo(message.chat.id, types.InputFile(f'res_{message.chat.id}.png'))
 
 
 @dp.message_handler(content_types=["document", "photo"])
