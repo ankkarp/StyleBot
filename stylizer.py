@@ -4,7 +4,6 @@ from torchvision import transforms, models
 import cv2
 import numpy as np
 from tqdm import tqdm
-import asyncio
 
 
 def load_image(img_path, max_size=400, shape=None):
@@ -72,12 +71,12 @@ def stylize(chat_id, steps=100):
     """
         Train model to stylize.
     """
-    print(chat_id)
+    # print(chat_id)
     vgg = torch.load('model.h5')
     style_weights = {'conv1_1': 1., 'conv2_1': 0.8, 'conv3_1': 0.5, 'conv4_1': 0.3, 'conv5_1': 0.1}
     content_weight = 1
     style_weight = 1e6
-    content = load_image(f'content_{chat_id}.png')
+    content = load_image(f'base_{chat_id}.png')
     style = load_image(f'style_{chat_id}.png', shape=content.shape[-2:])
     target = content.clone().requires_grad_(True)
     optimizer = optim.Adam([target], lr=0.13)

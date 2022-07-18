@@ -25,17 +25,34 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands='start')
 async def send_welcome(message: types.Message):
     """
-    This handler will be called when user sends `/start` or `/help` command
+    Попривестсвовать пользователя
     """
-    await message.reply("This bot can style image by pattern of another image. Send 2 pictures: 1) base 2) style")
+    await message.reply("Здравствуйте! Я умею изменять размер картинок, в том числе увеличивать их размер, "
+                        "и производить перенос стиля одной картинки на другую. "
+                        "Чтобы получить список комманд наберите /help")
 
+
+@dp.message_handler(commands='help')
+async def send_welcome(message: types.Message):
+    """
+    Вывести листинг комманд бота
+    """
+    await message.reply("Комманды:\nДля переноса стиля:\n"
+                        "/style - определить картинку со стилем\n"
+                        "/base - определить картинку, куда надо переносить стиль\n"
+                        "/run - запустить стилизацию\nДля супер-резолюции:"
+                        "/upscale - увеличить размер картинки в указанное в 4 раза\n"
+                        "Рекоммендуется присылать картинки в виде документов (то есть без сжатия)")
 
 
 @dp.message_handler(commands='style', commands_ignore_caption=False, content_types=["document", "photo"])
 async def set_style(message):
+    """
+    Определить картинку-стиль
+    """
     if message.photo:
         await message.photo[-1].download(destination_file=f'style_{message.chat.id}.png')
     elif message.document:
@@ -44,26 +61,33 @@ async def set_style(message):
         await bot.send_message(message.chat.id, 'Прикрепите картинку')
 
 
-@dp.message_handler(commands='content', commands_ignore_caption=False, content_types=["document", "photo"])
-async def set_content(message):
+@dp.message_handler(commands='base', commands_ignore_caption=False, content_types=["document", "photo"])
+async def set_base(message):
+    """
+    Определить картинку-основу
+    """
     if message.photo:
-        await message.photo[-1].download(destination_file=f'content_{message.chat.id}.png')
+        await message.photo[-1].download(destination_file=f'base_{message.chat.id}.png')
     elif message.document:
-        await message.document.download(destination_file=f'content_{message.chat.id}.png')
+        await message.document.download(destination_file=f'base_{message.chat.id}.png')
     else:
         await bot.send_message(message.chat.id, 'Прикрепите картинку')
 
 
 @dp.message_handler(commands='run')
 async def run(message):
-    # print(message.chat.id)
-    stylize(message.chat.id, 100)
-    await bot.send_photo(message.chat.id, types.InputFile(f'res_{message.chat.id}.png'))
+    """
+    Запустить перенос стиля
+    """
+    if os.path.exists(f'base_{message.chat.id}.png') or os.path.exists(f'style_{message.chat.id}.png'):
+        stylize(message.chat.id, 100)
+        await bot.send_photo(message.chat.id, types.InputFile(f'res_{message.chat.id}.png'))
+    else:
+        await bot.send_message(message.chat.id, "Сначала определите исходные картинки (/style - стиля, /base - основы)")
 
 
 @dp.message_handler(content_types=["document", "photo"])
 async def upscale(message):
-    # print(downloadable["file_size"])
     model = arch.RRDBNet(3, 3, 64, 23, gc=32)
     model.load_state_dict(torch.load('RRDB_ESRGAN_x4.pth'), strict=True)
     model.eval()
