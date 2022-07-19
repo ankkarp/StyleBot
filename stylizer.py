@@ -71,13 +71,13 @@ def stylize(chat_id, steps=100):
     """
         Train model to stylize.
     """
-    # print(chat_id)
-    vgg = torch.load('model.h5')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    vgg = torch.load('model.h5').to(device)
     style_weights = {'conv1_1': 1., 'conv2_1': 0.8, 'conv3_1': 0.5, 'conv4_1': 0.3, 'conv5_1': 0.1}
     content_weight = 1
     style_weight = 1e6
-    content = load_image(f'base_{chat_id}.png')
-    style = load_image(f'style_{chat_id}.png', shape=content.shape[-2:])
+    content = load_image(f'base_{chat_id}.png').to(device)
+    style = load_image(f'style_{chat_id}.png', shape=content.shape[-2:]).to(device)
     target = content.clone().requires_grad_(True)
     optimizer = optim.Adam([target], lr=0.13)
     content_features = get_features(content, vgg)
