@@ -17,6 +17,8 @@ dp = Dispatcher(bot)
 __all__ = ['set_style', 'set_base', 'get_style', 'get_base', 'run', 'upscale', ]
 
 
+
+
 @dp.message_handler(commands='start')
 async def send_welcome(message: types.Message):
     """
@@ -125,16 +127,6 @@ async def upscale(message: types.Message):
     model.eval()
     img_size = await download_img(f'{message.chat.id}.png', message)
     if img_size:
-        print(img_size)
-        print(message.caption)
-        if message.caption:
-            text = message.caption
-            if '-k' in text:
-                koef = text.split('-k')[1][: text.rfind(' ')].strip()
-                print(koef)
-                if not koef.isdigit():
-                    await bot.send_message(message.chat.id, "Коэффицент должен быть числом")
-                    return
         img = cv2.imread(f'{message.chat.id}.png', cv2.IMREAD_COLOR)
         img = img * 1.0 / 255
         img = torch.from_numpy(np.transpose(img[:, :, [2, 1, 0]], (2, 0, 1))).float()
