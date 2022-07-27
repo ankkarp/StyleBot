@@ -116,6 +116,23 @@ async def run(message: types.Message):
         await bot.send_message(message.chat.id, "Сначала определите исходные картинки: (/style - стиля, /base - основы)")
 
 
+# @dp.message_handler(commands='x')
+# async def upscale_by_times(message: types.Message):
+#     """
+#     Увеличить картинку в указанное кол-во раз
+#     :param message:
+#     :return:
+#     """
+#     inp_size = await download_img(f'{message.chat.id}.png', message)
+#     if inp_size:
+#         if message.caption:
+#             if message.caption.strip().isdigit():
+#                 res_size = message.caption.strip() * inp_size
+#
+#             else:
+#                 await bot.send_message(message.chat.id, "Укажите в сколько раз нужно увеличить картинку")
+
+
 @dp.message_handler(content_types=["document", "photo", "text"])
 async def upscale(message: types.Message):
     """

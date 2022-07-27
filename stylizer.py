@@ -4,6 +4,7 @@ from torchvision import transforms as tt
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
+import asyncio
 
 
 def load_image(img_path, max_size=400, shape=None):
@@ -44,7 +45,7 @@ def get_features(image, vgg, layers=None):
     return features
 
 
-async def gram_matrix(m):
+def gram_matrix(m):
     """
         Calculate the Gram Matrix of a given tensor
         Gram Matrix: https://en.wikipedia.org/wiki/Gramian_matrix
@@ -68,6 +69,18 @@ def im_convert(m):
     return image.clip(0, 1)
 
 
+def calc_style_loss(style_weights, target_features, style_grams):
+    style_loss = 0
+    for layer in style_weights:
+        target_feature = target_features[layer]
+        _, d, h, w = target_feature.shape
+        target_gram = gram_matrix(target_feature)
+        style_gram = style_grams[layer]
+        layer_style_loss = style_weights[layer] * torch.mean((target_gram - style_gram) ** 2)
+        style_loss += layer_style_loss / (d * h * w)
+    return style_loss
+
+
 async def stylize(chat_id, steps=100):
     """
         Train model to stylize.
@@ -83,21 +96,15 @@ async def stylize(chat_id, steps=100):
     optimizer = optim.Adam([target], lr=0.13)
     content_features = get_features(content, vgg)
     style_features = get_features(style, vgg)
-    style_grams = {layer: await gram_matrix(style_features[layer]) for layer in style_features}
+    style_grams = {layer: gram_matrix(style_features[layer]) for layer in style_features}
     for _ in tqdm(range(steps)):
         target_features = get_features(target, vgg)
         content_loss = torch.mean((target_features["conv4_2"] - content_features["conv4_2"]) ** 2)
-        style_loss = 0
-        for layer in style_weights:
-            target_feature = target_features[layer]
-            _, d, h, w = target_feature.shape
-            target_gram = await gram_matrix(target_feature)
-            style_gram = style_grams[layer]
-            layer_style_loss = style_weights[layer] * torch.mean((target_gram - style_gram) ** 2)
-            style_loss += layer_style_loss / (d * h * w)
+        style_loss = calc_style_loss(style_weights, target_features, style_grams)
         total_loss = content_weight * content_loss + style_weight * style_loss
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()
+        await asyncio.sleep(1e-17)
     Image.fromarray((im_convert(target) * 255).astype(np.uint8)).save(f'temp/res_{chat_id}.png')
     # cv2.imwrite(f'temp/res_{chat_id}.png', (im_convert(target) * 255).astype(np.uint8))
