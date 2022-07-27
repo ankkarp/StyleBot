@@ -1,5 +1,6 @@
 import logging
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher.filters.state import State, StatesGroup
 import os
 import numpy as np
 import torch
@@ -17,27 +18,35 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=args.token)
 dp = Dispatcher(bot)
 
+mode = State()
 
-@dp.message_handler(commands='start')
+@dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
     """
     Попривестсвовать пользователя
     """
-    await message.reply("Здравствуйте! Я умею производить увеличение резолюции и перенос стиля картинок."
-                        "")
+    await message.reply("Здравствуйте! Я умею производить увеличение резолюции и перенос стиля картинок.\n-----------\n"
+                        "Для супер-резолюции картинки:\n"
+                        "1. Прикрепите картинку без указания комманды\n"
+                        "2. Подождите результата\n\n"
+                        "Для стилизации картинки по стилю другой:\n"
+                        "1. Прикрепите основную картинку с подписью /base\n"
+                        "2. Прикрепите картинку-стиль с подписью /style\n"
+                        "3. Наберите комманду /run чтобы запустить стилизацию\n"
+                        "4. Подождите результата (может занять до 30 мин)\n")
 
 
-@dp.message_handler(commands='help')
-async def help(message: types.Message):
-    """
-    Вывести листинг комманд бота
-    """
-    await message.reply("Комманды:\n/style - определить картинку-стиль\n/base - определить картинку-основу\n"
-                        "/run - запустить стилизацию\n"
-                        "/get_base - прислать выбранную картинку-основу\n"
-                        "/get_style - прислать выбранную картинку-стиль\n"
-                        "Чтобы выполнить супер-резолюцию картинки пришлите ее без указания комманды\n"
-                        "Рекоммендуется присылать картинки в виде документов (то есть без сжатия)")
+# @dp.message_handler(commands='help')
+# async def help(message: types.Message):
+#     """
+#     Вывести листинг комманд бота
+#     """
+#     await message.reply("Комманды:\n/style - определить картинку-стиль\n/base - определить картинку-основу\n"
+#                         "/run - запустить стилизацию\n"
+#                         "/get_base - прислать выбранную картинку-основу\n"
+#                         "/get_style - прислать выбранную картинку-стиль\n"
+#                         "Чтобы выполнить супер-резолюцию картинки пришлите ее без указания комманды\n"
+#                         "Рекоммендуется присылать картинки в виде документов (то есть без сжатия)")
 
 
 async def download_img(path:str, message: types.Message):
@@ -82,9 +91,9 @@ async def get_img(path: str, message: types.Message):
     :return:
     """
     if os.path.exists(path):
-        await bot.send_photo(message.chat.id, types.InputFile(path))
+        await message.answer_photo(message.chat.id, types.InputFile(path))
     else:
-        await bot.send_message(message.chat.id, "Картинка еще не была определена")
+        await message.answer("Картинка еще не была определена")
 
 
 @dp.message_handler(commands='get_style')
@@ -110,27 +119,10 @@ async def run(message: types.Message):
     """
     if os.path.exists(f'temp/base_{message.chat.id}.png') and os.path.exists(f'temp/style_{message.chat.id}.png'):
         await stylize(message.chat.id, 100)
-        await bot.send_photo(message.chat.id, types.InputFile(f'temp/res_{message.chat.id}.png'))
+        await message.answer_photo(types.InputFile(f'temp/res_{message.chat.id}.png'), "Результат переноса стиля")
         os.remove(f'temp/res_{message.chat.id}.png')
     else:
-        await bot.send_message(message.chat.id, "Сначала определите исходные картинки: (/style - стиля, /base - основы)")
-
-
-# @dp.message_handler(commands='x')
-# async def upscale_by_times(message: types.Message):
-#     """
-#     Увеличить картинку в указанное кол-во раз
-#     :param message:
-#     :return:
-#     """
-#     inp_size = await download_img(f'{message.chat.id}.png', message)
-#     if inp_size:
-#         if message.caption:
-#             if message.caption.strip().isdigit():
-#                 res_size = message.caption.strip() * inp_size
-#
-#             else:
-#                 await bot.send_message(message.chat.id, "Укажите в сколько раз нужно увеличить картинку")
+        await message.answer("Сначала определите исходные картинки: (/style - стиля, /base - основы)")
 
 
 @dp.message_handler(content_types=["document", "photo", "text"])
@@ -144,19 +136,12 @@ async def upscale(message: types.Message):
     img_size = await download_img(f'temp/{message.chat.id}.png', message)
     if img_size:
         img = tt.ToTensor()(Image.open(f'temp/{message.chat.id}.png').convert('RGB'))[:3, :, :].unsqueeze(0)
-        # img = cv2.imread(f'{message.chat.id}.png', cv2.IMREAD_COLOR)
-        # img = img * 1.0 / 255
-        # img = torch.from_numpy(np.transpose(img[:, :, [2, 1, 0]], (2, 0, 1))).float()
-        # img = img.unsqueeze(0)
         with torch.no_grad():
             output = model(img).data.squeeze().float().cpu().clamp_(0, 1).numpy()
-        # output = np.transpose(output[[2, 1, 0], :, :], (1, 2, 0))
-        # output = (output * 255.0).round()
         output = np.transpose(output[:3, :, :], (1, 2, 0))
         img = Image.fromarray((output * 255).astype(np.uint8))
         img.save(f'temp/{message.chat.id}.png')
-        # cv2.imwrite(f'{message.chat.id}.png', output)
-        await bot.send_photo(message.chat.id, types.InputFile(f'temp/{message.chat.id}.png'))
+        await message.answer_photo(types.InputFile(f'temp/{message.chat.id}.png'))
         os.remove(f'temp/{message.chat.id}.png')
 
 
