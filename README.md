@@ -41,12 +41,13 @@
 
 ### Cупер-резолюция
 
-![bandicam 2022-07-29 23-22-19-284](https://user-images.githubusercontent.com/82397895/181837738-9c851bf3-dd60-4e2c-91e3-b125ceb2685b.png)
-![bandicam 2022-07-29 23-21-58-461](https://user-images.githubusercontent.com/82397895/181837804-d1a1460d-5935-4e7b-82e1-7d2de16ee4a3.png)
+![bandicam 2022-07-29 23-32-49-814](https://user-images.githubusercontent.com/82397895/181839042-5f007cc8-3e6f-4734-a4c8-ab73fdc67799.png)
+![bandicam 2022-07-29 23-32-32-406](https://user-images.githubusercontent.com/82397895/181839093-bf126f47-d08d-4adc-aaee-4871a09d7993.png)
 
 ### Стилизация
 
-![bandicam 2022-07-29 23-26-07-302](https://user-images.githubusercontent.com/82397895/181838410-f4405527-7e70-483c-a8c7-7ed444386cea.png)
-![bandicam 2022-07-29 23-29-32-996](https://user-images.githubusercontent.com/82397895/181838648-e5244a2d-ff07-4f61-a81d-3eb49cfd3545.png)
+![bandicam 2022-07-29 23-36-22-977](https://user-images.githubusercontent.com/82397895/181839478-416f8227-ce4e-4969-9c90-7e96c4abec11.png)
+![bandicam 2022-07-29 23-39-33-265](https://user-images.githubusercontent.com/82397895/181839929-4ddbd7fc-cf40-4213-95e7-36249ea537b5.png)
+
 
 
