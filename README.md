@@ -53,6 +53,8 @@
 
 ![image](https://user-images.githubusercontent.com/82397895/181995534-49ffb9f0-59ce-4dc8-8989-e5de68ae1942.png)
 
+## Ссылки
+
 Ноутбук-черновик с разными экспериментами: https://colab.research.google.com/drive/1C570pDpjZy6pyyYNNdTnMrqiRDHNWhHR?usp=sharing
 
 Видео-презентация работы бота: https://disk.yandex.ru/i/6gqxKNsCS1CrFg
