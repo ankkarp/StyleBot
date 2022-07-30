@@ -16,6 +16,5 @@ Pillow==9.2.0
 pytz==2022.1
 torch==1.8.1+cpu
 torchvision==0.9.1+cpu
-tqdm==4.64.0
 typing_extensions==4.3.0
 yarl==1.7.2

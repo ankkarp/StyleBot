@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import torch
 import torch.optim as optim
 from torchvision import transforms as tt
@@ -5,10 +7,12 @@ import numpy as np
 from PIL import Image
 
 
-def load_image(img_path, max_size=400, shape=None):
-    '''
-        Загрузка изображание, приведение к квадратному виду и нормализация
-    '''
+def load_image(img_path:str, max_size=400, shape=None):
+    """
+        Загрузка изображания, изменение его размера и нормализация
+
+        :param path: путь к изображению
+    """
     img = np.array(Image.open(img_path).convert('RGB'))
     size = shape if shape else min(max_size, max(img.shape))
     in_transform = tt.Compose([
@@ -21,7 +25,7 @@ def load_image(img_path, max_size=400, shape=None):
 
 def get_features(image, vgg, layers=None):
     """
-        Получить фичи (отличительные свойства) изображения
+        Получить свойства изображения
     """
     layers = {'0': 'conv1_1',
               '5': 'conv2_1',
@@ -63,7 +67,11 @@ def im_convert(m):
 
 async def stylize(message, steps=100):
     """
-        Обучение модели
+        Стилизация
+
+        :param message: объект сообщения от пользователя
+        :param steps: кол-ао эпох (default 100)
+        :return: BytesIO стилизованного изображения
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     vgg = torch.load('model.h5').to(device)
@@ -94,4 +102,7 @@ async def stylize(message, steps=100):
         optimizer.step()
         await message.bot.edit_message_text(chat_id=message.chat.id, message_id=message.message_id,
                                             text=f"[{i}/{steps}] \tВыполняется стилизация{'.'*(i%3+1)}")
-    Image.fromarray((im_convert(target) * 255).astype(np.uint8)).save(f'temp/res_{message.chat.id}.png')
+    buffer = BytesIO()
+    Image.fromarray((im_convert(target) * 255).astype(np.uint8)).save(buffer, "PNG")
+    buffer.seek(0)
+    return buffer
